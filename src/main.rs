@@ -4,9 +4,9 @@ fn main() {
 //    let p = 383;
 //    let q = 83;
 //    let e = 8963;
-    let p = gen_prime() as i128;
-    let q = gen_prime() as i128;
-    let e = gen_prime() as i128;
+    let p = gen_safe_prime() as i128;
+    let q = gen_safe_prime() as i128;
+    let e = gen_safe_prime() as i128;
     let n = p.clone()*q.clone();
     println!("{} {}", n, totient(p, q));
 
@@ -19,10 +19,10 @@ fn main() {
     println!("decipher : {}", pow_mod(c, d, n));
 }
 
-fn gen_prime() -> u16 {
+fn gen_safe_prime() -> u16 {
     let mut rng = thread_rng();
     let mut candidate = rng.gen();
-    while !miller_rabin(candidate as i128) {
+    while !miller_rabin(candidate as i128) || !miller_rabin(((candidate-1)/2) as i128) {
         candidate = rng.gen();
     }
     return candidate;
