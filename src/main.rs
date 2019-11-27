@@ -1,20 +1,63 @@
+extern crate rand;
+use rand::prelude::*;
 fn main() {
-    let p = 383;
-    let q = 83;
-    let e = 8963;
+//    let p = 383;
+//    let q = 83;
+//    let e = 8963;
+    let p = gen_prime() as i128;
+    let q = gen_prime() as i128;
+    let e = gen_prime() as i128;
     let n = p.clone()*q.clone();
-    println!("{} {}", n, fi(p, q));
+    println!("{} {}", n, totient(p, q));
 
     println!("public keys n: {} e: {}", n, e);
-    let d = modinv(e, fi(p, q));
-    println!("secret keys d: {} euler fi: {}", d, fi(p, q));
-    let mut m = 150;
-    let mut c = pow_mod(m, e, n);
+    let d = modinv(e, totient(p, q));
+    println!("secret keys d: {} euler totient: {} p: {} q: {}", d, totient(p, q), p, q);
+    let m = 999992;
+    let c = pow_mod(m, e, n);
     println!("plain: {} cipher: {}", m, c);
     println!("decipher : {}", pow_mod(c, d, n));
 }
 
-fn fi(p: i128, q: i128) -> i128 {
+fn gen_prime() -> u16 {
+    let mut rng = thread_rng();
+    let mut candidate = rng.gen();
+    while !miller_rabin(candidate as i128) {
+        candidate = rng.gen();
+    }
+    return candidate;
+}
+
+fn miller_rabin(n: i128) -> bool {
+    let k: usize = 1000;
+    if n == 2 {
+        return true;
+    }
+    if n == 1 || n & 1 == 0 {
+        return false;
+    }
+    let mut d = n - 1;
+    while d & 1 == 0 {
+        d >>= 1;
+    }
+
+    let mut rng = thread_rng();
+    for _ in 0..k {
+        let a = rng.gen_range(1, n-1);
+        let mut t = d;
+        let mut y = pow_mod(a, t, n);
+        while t != n-1 && y != 1 && y != n-1 {
+            y = pow_mod(y, 2, n);
+            t<<=1;
+        }
+        if y != n-1 && t & 1 == 0 {
+            return false;
+        }
+    }
+    return true;
+}
+
+fn totient(p: i128, q: i128) -> i128 {
     return (p-1) * (q-1)
 }
 
@@ -33,10 +76,11 @@ fn pow_mod(x: i128, n: i128, m: i128) -> i128 {
 }
 
 fn xgcd(a:i128, b:i128) -> (i128, i128, i128) {
-    let (mut x0, mut y0, mut x1, mut y1, mut a, mut b, mut q)= (1, 0, 0, 1, a, b, a/b);
+    let (mut x0, mut y0, mut x1, mut y1)= (1, 0, 0, 1);
+    let (mut a, mut b) = (a, b);
 
     while b != 0 {
-        q = a / b;
+        let q = a / b;
         let tmp = b;
         b = a % b;
         a = tmp;
