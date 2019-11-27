@@ -1,35 +1,34 @@
 extern crate rand;
 use rand::prelude::*;
 fn main() {
-//    let p = 383;
-//    let q = 83;
-//    let e = 8963;
     let p = gen_safe_prime() as i128;
     let q = gen_safe_prime() as i128;
     let e = gen_safe_prime() as i128;
-    let n = p.clone()*q.clone();
-    println!("{} {}", n, totient(p, q));
+    let n = (p as i128)*(q as i128);
+    println!("{} {}", n, euler_totient(p, q));
 
-    println!("public keys n: {} e: {}", n, e);
-    let d = modinv(e, totient(p, q));
-    println!("secret keys d: {} euler totient: {} p: {} q: {}", d, totient(p, q), p, q);
-    let m = 999992;
-    let c = pow_mod(m, e, n);
-    println!("plain: {} cipher: {}", m, c);
-    println!("decipher : {}", pow_mod(c, d, n));
+    println!("public keys (n: {} e: {})", n, e);
+    let d = modinv(e, euler_totient(p, q));
+    println!("secret keys (d: {} euler_totient: {} p: {} q: {})", d, euler_totient(p, q), p, q);
+
+    let plain = "Hello, world.";
+    let cipher = plain.as_bytes().iter().map(|&x| pow_mod(x as i128, e, n)).collect::<Vec<i128>>();
+    println!("plain: {} cipher: {:?}", plain, cipher.as_slice());
+    let deciper = cipher.iter().map(|&x| pow_mod(x, d, n) as u8 as char).collect::<String>();
+    println!("decipher : {:?}", deciper);
 }
 
-fn gen_safe_prime() -> u16 {
+fn gen_safe_prime() -> i128 {
     let mut rng = thread_rng();
-    let mut candidate = rng.gen();
+    let mut candidate: u16 = rng.gen();
     while !miller_rabin(candidate as i128) || !miller_rabin(((candidate-1)/2) as i128) {
         candidate = rng.gen();
     }
-    return candidate;
+    return candidate as i128;
 }
 
 fn miller_rabin(n: i128) -> bool {
-    let k: usize = 1000;
+    let k: usize = 20;
     if n == 2 {
         return true;
     }
@@ -57,12 +56,12 @@ fn miller_rabin(n: i128) -> bool {
     return true;
 }
 
-fn totient(p: i128, q: i128) -> i128 {
+fn euler_totient(p: i128, q: i128) -> i128 {
     return (p-1) * (q-1)
 }
 
 fn pow_mod(x: i128, n: i128, m: i128) -> i128 {
-    let mut x = x.clone();
+    let mut x = x as i128;
     let mut i = 1;
     let mut p = 1;
     while i <= n {
